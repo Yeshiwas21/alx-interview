@@ -1,50 +1,39 @@
 #!/usr/bin/python3
 """
-Script that reads stdin line by line and computes metrics:
-Input format: <IP Address> - [<date>] "GET /projects/260 HTTP/1.1" <status
-                code> <file size>
+Log parsing
 """
 
 import sys
-code = {"200": 0, "301": 0, "400": 0, "401": 0,
-        "403": 0, "404": 0, "405": 0, "500": 0}
-sum = 0
 
+if __name__ == '__main__':
 
-def print_stats():
-    """
-    Function that print stats about log
-    """
-    global sum
+    filesize, count = 0, 0
+    codes = ["200", "301", "400", "401", "403", "404", "405", "500"]
+    stats = {k: 0 for k in codes}
 
-    print('File size: {}'.format(sum))
-    stcdor = sorted(code.keys())
-    for each in stcdor:
-        if code[each] > 0:
-            print('{}: {}'.format(each, code[each]))
+    def print_stats(stats: dict, file_size: int) -> None:
+        print("File size: {:d}".format(filesize))
+        for k, v in sorted(stats.items()):
+            if v:
+                print("{}: {}".format(k, v))
 
-
-if __name__ == "__main__":
-    cnt = 0
     try:
-        """ Iterate the standard input """
-        for data in sys.stdin:
+        for line in sys.stdin:
+            count += 1
+            data = line.split()
             try:
-                fact = data.split(' ')
-                """ If there is a status code """
-                if fact[-2] in code:
-                    code[fact[-2]] += 1
-                """ If there is a length """
-                sum += int(fact[-1])
-            except Exception:
+                status_code = data[-2]
+                if status_code in stats:
+                    stats[status_code] += 1
+            except BaseException:
                 pass
-            """ Printing control """
-            cnt += 1
-            if cnt == 10:
-                print_stats()
-                cnt = 0
+            try:
+                filesize += int(data[-1])
+            except BaseException:
+                pass
+            if count % 10 == 0:
+                print_stats(stats, filesize)
+        print_stats(stats, filesize)
     except KeyboardInterrupt:
-        print_stats()
+        print_stats(stats, filesize)
         raise
-    else:
-        print_stats()
