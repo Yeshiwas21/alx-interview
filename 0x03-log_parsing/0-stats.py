@@ -13,48 +13,72 @@ Status code must be printed in ascending order
 import sys
 import time
 
-def print_msg(codes, file_size):
-    print("File size: {}".format(file_size))
-    for code in sorted(codes.keys(), key=lambda x: int(x)):
-        if codes[code] != 0:
-            print("{}: {}".format(code, codes[code]))
+def print_statistics(status_counts, total_file_size):
+    print("File size:", total_file_size)
+    for code in sorted(status_counts):
+        if status_counts[code] > 0:
+            print("{}: {}".format(code, status_counts[code]))
 
-file_size = 0
-count_lines = 0
-codes = {
+status_counts = {
     "200": 0,
     "301": 0,
     "400": 0,
     "401": 0,
-    "403": 0,
     "404": 0,
     "405": 0,
     "500": 0
 }
-
+total_file_size = 0
 start_time = time.time()
+lines_processed = 0
 
 try:
     for line in sys.stdin:
-        parsed_line = line.split()
+        # Parse the line
+        parts = line.strip().split()
+        if len(parts) != 7:
+            continue
 
-        if len(parsed_line) == 7:  # Checking if the line has all required components
-            count_lines += 1
-            file_size += int(parsed_line[-1])  # Last element is file size
-            code = parsed_line[-2]  # Second last element is status code
+        status_code = parts[-2]
+        file_size = int(parts[-1])
 
-            if code in codes:
-                codes[code] += 1
+        # Update metrics
+        if status_code.isdigit() and status_code in status_counts:
+            status_counts[status_code] += 1
+            total_file_size += file_size
+            lines_processed += 1
 
-            if time.time() - start_time >= 600:  # Check if 10 minutes have passed
-                print_msg(codes, file_size)
-                start_time = time.time()
-                count_lines = 0
-                file_size = 0
-                codes = {key: 0 for key in codes}
+        # Check if 10 minutes have elapsed
+        if time.time() - start_time >= 600:
+            print_statistics(status_counts, total_file_size)
+            start_time = time.time()
+            lines_processed = 0
+            total_file_size = 0
+            status_counts = {
+                "200": 0,
+                "301": 0,
+                "400": 0,
+                "401": 0,
+                "404": 0,
+                "405": 0,
+                "500": 0
+            }
+
+        # Check if 10 lines have been processed
+        if lines_processed == 10:
+            print_statistics(status_counts, total_file_size)
+            lines_processed = 0
+            total_file_size = 0
+            status_counts = {
+                "200": 0,
+                "301": 0,
+                "400": 0,
+                "401": 0,
+                "404": 0,
+                "405": 0,
+                "500": 0
+            }
 
 except KeyboardInterrupt:
-    pass  # Do nothing if interrupted
-
-finally:
-    print_msg(codes, file_size)  # Print final statistics
+    # Print final statistics if interrupted
+    print_statistics(status_counts, total_file_size)
