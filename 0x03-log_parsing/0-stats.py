@@ -1,57 +1,52 @@
 #!/usr/bin/python3
-"""
-Read stdin line by line and computes metrics
-Input format: <IP Address> - [<date>] "GET /projects/260 HTTP/1.1"
-<status code> <file size>, skip line if not this format
-After every 10minutes or keyboard interrupt (CTRL + C)
-print these from beginning: number of lines by status code
-possible status codes: 200, 301, 400, 401, 404, 405, and 500
-if status code isn't an integer, do not print it
-format: <status code>: <number>
-Status code must be printed in ascending order
-"""
 import sys
+import re
+from collections import defaultdict
 
+# Regular expression pattern to match the log entry format
+LOG_PATTERN = re.compile(r'^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) - \[.*\] "GET /projects/260 HTTP/1\.1" (\d{3}) (\d+)$')
 
-def print_msg(codes, file_size):
-    print("File size: {}".format(file_size))
-    for key, val in sorted(codes.items()):
-        if val != 0:
-            print("{}: {}".format(key, val))
+def parse_log_line(line):
+    """
+    Parse a single log line and extract IP address, status code, and file size.
+    Return a tuple (ip_address, status_code, file_size).
+    """
+    match = LOG_PATTERN.match(line)
+    if match:
+        ip_address, status_code, file_size = match.groups()
+        return ip_address, int(status_code), int(file_size)
+    else:
+        return None
 
+def print_statistics(total_size, status_counts):
+    """
+    Print statistics including total file size and number of lines by status code.
+    """
+    print(f'Total file size: {total_size}')
+    for status_code in sorted(status_counts.keys()):
+        print(f'{status_code}: {status_counts[status_code]}')
 
-file_size = 0
-code = 0
-count_lines = 0
-codes = {
-    "200": 0,
-    "301": 0,
-    "400": 0,
-    "401": 0,
-    "403": 0,
-    "404": 0,
-    "405": 0,
-    "500": 0
-}
+def main():
+    total_size = 0
+    status_counts = defaultdict(int)
+    line_count = 0
 
-try:
-    for line in sys.stdin:
-        parsed_line = line.split()
-        parsed_line = parsed_line[::-1]
+    try:
+        for line in sys.stdin:
+            line = line.strip()
+            parsed = parse_log_line(line)
+            if parsed:
+                _, status_code, file_size = parsed
+                total_size += file_size
+                status_counts[status_code] += 1
+                line_count += 1
 
-        if len(parsed_line) > 2:
-            count_lines += 1
+                if line_count % 10 == 0:
+                    print_statistics(total_size, status_counts)
+            else:
+                continue
+    except KeyboardInterrupt:
+        print_statistics(total_size, status_counts)
 
-            if count_lines <= 10:
-                file_size += int(parsed_line[0])
-                code = parsed_line[1]
-
-                if (code in codes.keys()):
-                    codes[code] += 1
-
-            if (count_lines == 10):
-                print_msg(codes, file_size)
-                count_lines = 0
-
-finally:
-    print_msg(codes, file_size)
+if __name__ == "__main__":
+    main()
