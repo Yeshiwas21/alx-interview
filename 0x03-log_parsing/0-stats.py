@@ -1,5 +1,7 @@
 #!/usr/bin/python3
-"""A script that reads stdin line by line and computes metrics"""
+"""
+A script that reads stdin line by line and computes metrics
+"""
 
 import sys
 
@@ -12,9 +14,9 @@ count = 0  # Keep count of the number of lines counted
 
 try:
     for line in sys.stdin:
-        line_list = line.split(" ")
+        line_list = line.split()
 
-        if len(line_list) > 4:
+        if len(line_list) > 7 and line_list[5] == '"GET' and line_list[6] == '/projects/260' and line_list[7].startswith('HTTP/'):
             status_code = line_list[-2]
             file_size = int(line_list[-1])
 
@@ -33,16 +35,16 @@ try:
             print('File size:', total_size)
 
             # Print out status code counts
-            for key, value in sorted(status_codes_dict.items()):
-                if value != 0:
-                    print('{}: {}'.format(key, value))
+            for key in sorted(status_codes_dict.keys(), key=lambda x: int(x)):
+                if status_codes_dict[key] != 0:
+                    print('{}: {}'.format(key, status_codes_dict[key]))
 
-except Exception as err:
+except KeyboardInterrupt:
     pass
 
 finally:
     # Print final statistics
     print('File size:', total_size)
-    for key, value in sorted(status_codes_dict.items()):
-        if value != 0:
-            print('{}: {}'.format(key, value)))
+    for key in sorted(status_codes_dict.keys(), key=lambda x: int(x)):
+        if status_codes_dict[key] != 0:
+            print('{}: {}'.format(key, status_codes_dict[key]))
