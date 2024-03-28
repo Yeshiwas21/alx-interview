@@ -41,10 +41,8 @@ def main():
                 status_counts[status_code] += 1
                 line_count += 1
 
-                if line_count % 10 == 0:
-                    print_statistics(total_size, status_counts)
-            else:
-                continue
+            if line_count % 10 == 0:
+                print_statistics(total_size, status_counts)
     except KeyboardInterrupt:
         print_statistics(total_size, status_counts)
 
