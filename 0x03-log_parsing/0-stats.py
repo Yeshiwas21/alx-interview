@@ -15,12 +15,11 @@ import time
 
 def print_msg(codes, file_size):
     print("File size: {}".format(file_size))
-    for key, val in sorted(codes.items()):
+    for key, val in sorted(codes.items(), key=lambda x: int(x[0])):
         if val != 0:
             print("{}: {}".format(key, val))
 
 file_size = 0
-code = 0
 count_lines = 0
 codes = {
     "200": 0,
@@ -34,6 +33,7 @@ codes = {
 }
 
 start_time = time.time()
+
 try:
     for line in sys.stdin:
         parsed_line = line.split()
