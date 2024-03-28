@@ -15,9 +15,9 @@ import time
 
 def print_msg(codes, file_size):
     print("File size: {}".format(file_size))
-    for key, val in sorted(codes.items(), key=lambda x: int(x[0])):
-        if val != 0:
-            print("{}: {}".format(key, val))
+    for code in sorted(codes.keys(), key=lambda x: int(x)):
+        if codes[code] != 0:
+            print("{}: {}".format(code, codes[code]))
 
 file_size = 0
 count_lines = 0
