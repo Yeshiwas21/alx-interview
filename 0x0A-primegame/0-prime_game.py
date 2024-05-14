@@ -1,37 +1,42 @@
 #!/usr/bin/python3
-""" Prime Game Problem
-    Topic: Eratosthenes algorithm
-"""
+"""0. Prime Game - Maria and Ben are playing a game"""
 
 
 def isWinner(x, nums):
+    """x - rounds
+    nums - numbers list
     """
-    Determines the winner in the prime game using
-    Eratosthenes prime sieving algorithm
-    """
-    Ben = 0
-    Maria = 0
-
-    for round in range(x):
-        playing_numbers = [num for num in range(2, nums[round] + 1)]
-        index = 0
-        # Sieve prime numbers per round
-        while (index < len(playing_numbers)):
-            current_prime = playing_numbers[index]
-            sieve_index = index + current_prime
-            while(sieve_index < len(playing_numbers)):
-                playing_numbers.pop(sieve_index)
-                sieve_index += current_prime - 1
-            index += 1
-        # Determine winner - if number of primes is even player 1 wins
-        # else player 2 wins. Player 2  also wins if there is only one
-        # number to pick from
-        prime_count = (len(playing_numbers))
-        if prime_count and prime_count % 2:
-            Maria += 1
-        else:
-            Ben += 1
-
-    if Ben == Maria:
+    if x <= 0 or nums is None:
         return None
-    return 'Ben' if Ben > Maria else 'Maria'
+    if x != len(nums):
+        return None
+
+    ben = 0
+    maria = 0
+
+    a = [1 for x in range(sorted(nums)[-1] + 1)]
+    a[0], a[1] = 0, 0
+    for i in range(2, len(a)):
+        rm_multiples(a, i)
+
+    for i in nums:
+        if sum(a[0:i + 1]) % 2 == 0:
+            ben += 1
+        else:
+            maria += 1
+    if ben > maria:
+        return "Ben"
+    if maria > ben:
+        return "Maria"
+    return None
+
+
+def rm_multiples(ls, x):
+    """removes multiple
+    of primes
+    """
+    for i in range(2, len(ls)):
+        try:
+            ls[i * x] = 0
+        except (ValueError, IndexError):
+            break
